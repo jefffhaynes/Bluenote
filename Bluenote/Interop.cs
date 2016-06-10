@@ -70,15 +70,5 @@ namespace Bluenote
             IntPtr serviceBuffer,
             out ushort serviceBufferActual,
             uint flags);
-
-        //[DllImport("irprops.cpl", SetLastError = true)]
-        //public static extern BluetoothDeviceFindSafeHandle BluetoothFindFirstDevice(
-        //    ref BLUETOOTH_DEVICE_SEARCH_PARAMS searchParams, ref BLUETOOTH_DEVICE_INFO deviceInfo);
-
-        //[DllImport("Irprops.cpl", SetLastError = true)]
-        //public static extern bool BluetoothFindNextDevice(BluetoothDeviceFindSafeHandle hFind, ref BLUETOOTH_DEVICE_INFO pbtdi);
-
-        //[DllImport("irprops.cpl", SetLastError = true)]
-        //public static extern bool BluetoothFindDeviceClose(IntPtr hFind);
     }
 }
