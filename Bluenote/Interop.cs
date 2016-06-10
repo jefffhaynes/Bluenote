@@ -7,13 +7,19 @@ namespace Bluenote
 {
     internal static class Interop
     {
+        public const uint FILE_ATTRIBUTE_NORMAL = 0x80;
+        public const uint GENERIC_READ = 0x80000000;
+        public const uint GENERIC_WRITE = 0x40000000;
+        public const uint CREATE_NEW = 1;
+        public const uint CREATE_ALWAYS = 2;
+        public const uint OPEN_EXISTING = 3;
+
         [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
         public static extern DeviceInfoSetSafeHandle SetupDiGetClassDevs(
             ref Guid classGuid,
             IntPtr enumerator,
             IntPtr hwndParent,
-            DiGetClassFlags flags
-            );
+            DiGetClassFlags flags);
 
         [DllImport("setupapi.dll", SetLastError = true)]
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
@@ -31,8 +37,7 @@ namespace Bluenote
             out uint propertyRegDataType,
             byte[] propertyBuffer,
             uint propertyBufferSize,
-            out uint requiredSize
-            );
+            out uint requiredSize);
 
         [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
         internal static extern bool SetupDiEnumDeviceInterfaces(
@@ -50,13 +55,6 @@ namespace Bluenote
             uint deviceInterfaceDetailDataSize,
             out uint requiredSize,
             [In, Out] SP_DEVINFO_DATA deviceInfoData);
-
-        public const uint FILE_ATTRIBUTE_NORMAL = 0x80;
-        public const uint GENERIC_READ = 0x80000000;
-        public const uint GENERIC_WRITE = 0x40000000;
-        public const uint CREATE_NEW = 1;
-        public const uint CREATE_ALWAYS = 2;
-        public const uint OPEN_EXISTING = 3;
 
         [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
         public static extern SafeFileHandle CreateFile(string lpFileName, uint dwDesiredAccess,
