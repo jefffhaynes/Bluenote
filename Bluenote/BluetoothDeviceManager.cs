@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Text;
-using Microsoft.Win32.SafeHandles;
 
 namespace Bluenote
 {
@@ -134,34 +133,5 @@ namespace Bluenote
                 Marshal.FreeHGlobal(serviceBuffer);
             }
         }
-
-        //public static void FindDevices()
-        //{
-        //    var searchParams = new BLUETOOTH_DEVICE_SEARCH_PARAMS
-        //    {
-        //        fReturnConnected = true,
-        //        fIssueInquiry = true,
-        //        cTimeoutMultiplier = 1
-        //    };
-
-        //    searchParams.Initialize();
-
-        //    var deviceInfo = new BLUETOOTH_DEVICE_INFO();
-        //    deviceInfo.Initialize();
-
-        //    BluetoothDeviceFindSafeHandle handle;
-        //    using (handle = Interop.BluetoothFindFirstDevice(ref searchParams, ref deviceInfo))
-        //    {
-        //        var error = Marshal.GetLastWin32Error();
-
-        //        if (handle.IsInvalid)
-        //            return;
-
-        //        while (Interop.BluetoothFindNextDevice(handle, ref deviceInfo))
-        //        {
-                    
-        //        }
-        //    }
-        //}
     }
 }
