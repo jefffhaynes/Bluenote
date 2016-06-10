@@ -1,13 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace BluetoothGATTInterop
+namespace Bluenote
 {
     public static class BluetoothDeviceManager
     {
         private static readonly Guid BluetoothServiceClassId = new Guid("e0cbf06c-cd8b-4647-bb8a-263b43f0f974");
+        private static readonly Guid BluetoothInterfaceServiceClassId = new Guid("781aee18-7733-4ce4-add0-91f41c67b592");
+
         private const int ErrorInsufficientBuffer = 122;
 
         public static IEnumerable<string> GetDevices()
@@ -17,50 +20,112 @@ namespace BluetoothGATTInterop
 
         public static IEnumerable<string> GetDevices(Guid serviceClass)
         {
-            DeviceInfoSetSafeHandle deviceInfoSet = Interop.SetupDiGetClassDevs(
-                ref serviceClass, IntPtr.Zero, IntPtr.Zero,
-                DiGetClassFlags.DIGCF_PRESENT);
-            
-            SP_DEVINFO_DATA deviceInfoData = new SP_DEVINFO_DATA();
-            deviceInfoData.cbSize = (uint)Marshal.SizeOf(deviceInfoData);
-
-            for (uint i = 0; Interop.SetupDiEnumDeviceInfo(deviceInfoSet, i, ref deviceInfoData); i++)
+            using (DeviceInfoSetSafeHandle deviceInfoSet = SetupDiGetClassDevs(serviceClass, DiGetClassFlags.DIGCF_PRESENT))
             {
-                // loop on SetupDiGetDeviceRegistryProperty until we have enough space for returned property
-                uint propertyRegDataType;
-                byte[] propertyBuffer = new byte[0];
-                uint propertyBufferSize;
-                while (!Interop.SetupDiGetDeviceRegistryProperty(deviceInfoSet, ref deviceInfoData,
-                        SetupDiGetDeviceRegistryProperty.SPDRP_DEVICEDESC, out propertyRegDataType, propertyBuffer,
-                        (uint)propertyBuffer.Length, out propertyBufferSize))
+                SP_DEVINFO_DATA deviceInfoData = new SP_DEVINFO_DATA();
+
+                for (uint i = 0; Interop.SetupDiEnumDeviceInfo(deviceInfoSet, i, ref deviceInfoData); i++)
                 {
-                    if (Marshal.GetLastWin32Error() == ErrorInsufficientBuffer)
+                    // loop on SetupDiGetDeviceRegistryProperty until we have enough space for returned property
+                    uint propertyRegDataType;
+                    byte[] propertyBuffer = new byte[0];
+                    uint propertyBufferSize;
+                    while (!Interop.SetupDiGetDeviceRegistryProperty(deviceInfoSet, deviceInfoData,
+                        SetupDiGetDeviceRegistryProperty.SPDRP_DEVICEDESC, out propertyRegDataType, propertyBuffer,
+                        (uint) propertyBuffer.Length, out propertyBufferSize))
                     {
-                        // Double the size to avoid problems on W2k MBCS systems per KB 888609. 
-                        propertyBuffer = new byte[propertyBufferSize*2];
+                        if (Marshal.GetLastWin32Error() == ErrorInsufficientBuffer)
+                        {
+                            // Double the size to avoid problems on W2k MBCS systems per KB 888609. 
+                            propertyBuffer = new byte[propertyBufferSize*2];
+                        }
+                        else
+                        {
+                            break;
+                        }
                     }
-                    else
+
+                    yield return Encoding.Unicode.GetString(propertyBuffer);
+                }
+            }
+        }
+        
+        public static IEnumerable<string> GetDeviceInterfaces()
+        {
+            return GetDeviceInterfaces(BluetoothInterfaceServiceClassId);
+        }
+
+        public static IEnumerable<string> GetDeviceInterfaces(Guid serviceClass)
+        {
+            using (DeviceInfoSetSafeHandle deviceInfoSet = SetupDiGetClassDevs(serviceClass, DiGetClassFlags.DIGCF_PRESENT | DiGetClassFlags.DIGCF_DEVICEINTERFACE))
+            {
+                SP_DEVICE_INTERFACE_DATA deviceInterfaceData = new SP_DEVICE_INTERFACE_DATA();
+
+                for (uint i = 0;
+                    Interop.SetupDiEnumDeviceInterfaces(deviceInfoSet, null, ref serviceClass, i, deviceInterfaceData);
+                    i++)
+                {
+                    uint requiredSize;
+                    SP_DEVINFO_DATA deviceInfoData = new SP_DEVINFO_DATA();
+                    if (!Interop.SetupDiGetDeviceInterfaceDetail(deviceInfoSet, deviceInterfaceData, IntPtr.Zero, 0,
+                        out requiredSize, deviceInfoData))
                     {
-                        break;
+                        IntPtr deviceInterfaceDetailData = Marshal.AllocHGlobal((int) requiredSize);
+
+                        try
+                        {
+                            // check for 32 vs 64 bit system
+                            var size = IntPtr.Size == 8 ? 8 : 4 + Marshal.SystemDefaultCharSize; 
+
+                            Marshal.WriteInt32(deviceInterfaceDetailData, size);
+
+                            if (!Interop.SetupDiGetDeviceInterfaceDetail(deviceInfoSet, deviceInterfaceData,
+                                deviceInterfaceDetailData, requiredSize, out requiredSize, deviceInfoData))
+                                throw new Win32Exception();
+
+                            yield return Marshal.PtrToStringAuto(deviceInterfaceDetailData + 4);
+                        }
+                        finally
+                        {
+                            Marshal.FreeHGlobal(deviceInterfaceDetailData);
+                        }
                     }
                 }
-
-                yield return Encoding.Unicode.GetString(propertyBuffer);
             }
-
-            SP_DEVICE_INTERFACE_DATA devInterfaceData = new SP_DEVICE_INTERFACE_DATA();
-            devInterfaceData.cbSize = Marshal.SizeOf(devInterfaceData);
-
-            var spDevinfoData = new SP_DEVINFO_DATA();
-            bool initialized = Interop.SetupDiEnumDeviceInterfaces(deviceInfoSet, ref spDevinfoData, ref serviceClass, 0,
-                    ref devInterfaceData);
-            // I assume The DevInterfaceData is populated correctly as it matches the C Code
-            // And I've compared the values in memory and they match
-
-            //uint bytesReturned;
-            //initialized = Interop.SetupDiGetDeviceInterfaceDetail(deviceInfoSet, ref devInterfaceData, IntPtr.Zero, 0, out bytesReturned, IntPtr.Zero);
-            //// I expect bytesReturned = 83 and initialized = true which is the value that is returned in the C Code
-            //// Instead the value 162 is returned
         }
+
+        private static DeviceInfoSetSafeHandle SetupDiGetClassDevs(Guid serviceClass, DiGetClassFlags classFlags)
+        {
+            return Interop.SetupDiGetClassDevs(ref serviceClass, IntPtr.Zero, IntPtr.Zero, classFlags);
+        }
+
+        //public static void FindDevices()
+        //{
+        //    var searchParams = new BLUETOOTH_DEVICE_SEARCH_PARAMS
+        //    {
+        //        fReturnConnected = true,
+        //        fIssueInquiry = true,
+        //        cTimeoutMultiplier = 1
+        //    };
+
+        //    searchParams.Initialize();
+
+        //    var deviceInfo = new BLUETOOTH_DEVICE_INFO();
+        //    deviceInfo.Initialize();
+
+        //    BluetoothDeviceFindSafeHandle handle;
+        //    using (handle = Interop.BluetoothFindFirstDevice(ref searchParams, ref deviceInfo))
+        //    {
+        //        var error = Marshal.GetLastWin32Error();
+
+        //        if (handle.IsInvalid)
+        //            return;
+
+        //        while (Interop.BluetoothFindNextDevice(handle, ref deviceInfo))
+        //        {
+                    
+        //        }
+        //    }
+        //}
     }
 }

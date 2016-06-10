@@ -1,7 +1,7 @@
 ﻿
 // ReSharper disable InconsistentNaming
 
-namespace BluetoothGATTInterop
+namespace Bluenote
 {
     /// <summary>
     /// Flags for SetupDiGetDeviceRegistryProperty().

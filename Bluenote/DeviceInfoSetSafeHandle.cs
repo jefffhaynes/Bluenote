@@ -1,7 +1,7 @@
 ﻿using System.Security.Permissions;
 using Microsoft.Win32.SafeHandles;
 
-namespace BluetoothGATTInterop
+namespace Bluenote
 {
     [SecurityPermission(SecurityAction.InheritanceDemand, UnmanagedCode = true)]
     [SecurityPermission(SecurityAction.Demand, UnmanagedCode = true)]

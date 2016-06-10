@@ -41,6 +41,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BluetoothDeviceManager.cs" />
+    <Compile Include="BLUETOOTH_DEVICE_INFO.cs" />
+    <Compile Include="BLUETOOTH_DEVICE_SEARCH_PARAMS.cs" />
+    <Compile Include="BluetoothDeviceFindSafeHandle.cs" />
     <Compile Include="DeviceInfoSetSafeHandle.cs" />
     <Compile Include="DiGetClassFlags.cs" />
     <Compile Include="Interop.cs" />
@@ -48,6 +51,7 @@
     <Compile Include="SetupDiGetDeviceRegistryProperty.cs" />
     <Compile Include="SP_DEVICE_INTERFACE_DATA.cs" />
     <Compile Include="SP_DEVINFO_DATA.cs" />
+    <Compile Include="SYSTEMTIME.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -3,14 +3,14 @@ using System.Runtime.InteropServices;
 
 // ReSharper disable InconsistentNaming
 
-namespace BluetoothGATTInterop
+namespace Bluenote
 {
     [StructLayout(LayoutKind.Sequential)]
-    internal struct SP_DEVINFO_DATA
+    internal class SP_DEVINFO_DATA
     {
-        public uint cbSize;
-        public Guid classGuid;
-        public uint devInst;
-        public IntPtr reserved;
+        internal uint cbSize = (uint)Marshal.SizeOf(typeof(SP_DEVINFO_DATA));
+        internal Guid classGuid = Guid.Empty;
+        internal int devInst = 0;
+        internal int reserved = 0;
     }
 }

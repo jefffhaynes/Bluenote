@@ -2,7 +2,7 @@
 
 // ReSharper disable InconsistentNaming
 
-namespace BluetoothGATTInterop
+namespace Bluenote
 {
     [Flags]
     public enum DiGetClassFlags : uint

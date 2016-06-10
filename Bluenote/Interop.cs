@@ -2,11 +2,11 @@
 using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
 
-namespace BluetoothGATTInterop
+namespace Bluenote
 {
     internal static class Interop
     {
-        [DllImport("setupapi.dll", CharSet = CharSet.Auto)]
+        [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
         public static extern DeviceInfoSetSafeHandle SetupDiGetClassDevs(
             ref Guid classGuid,
             IntPtr enumerator,
@@ -16,19 +16,16 @@ namespace BluetoothGATTInterop
 
         [DllImport("setupapi.dll", SetLastError = true)]
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
-        public static extern bool SetupDiDestroyDeviceInfoList
-            (
-            IntPtr deviceInfoSet
-            );
+        public static extern bool SetupDiDestroyDeviceInfoList(IntPtr deviceInfoSet);
 
         [DllImport("setupapi.dll", SetLastError = true)]
         public static extern bool SetupDiEnumDeviceInfo(DeviceInfoSetSafeHandle deviceInfoSet, uint memberIndex,
             ref SP_DEVINFO_DATA deviceInfoData);
 
-        [DllImport("setupapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
         public static extern bool SetupDiGetDeviceRegistryProperty(
             DeviceInfoSetSafeHandle deviceInfoSet,
-            ref SP_DEVINFO_DATA deviceInfoData,
+            [In, Out] SP_DEVINFO_DATA deviceInfoData,
             SetupDiGetDeviceRegistryProperty property,
             out uint propertyRegDataType,
             byte[] propertyBuffer,
@@ -36,23 +33,31 @@ namespace BluetoothGATTInterop
             out uint requiredSize
             );
 
-        [DllImport("setupapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern bool SetupDiEnumDeviceInterfaces(
-            DeviceInfoSetSafeHandle hDevInfo,
-            ref SP_DEVINFO_DATA devInfo,
+        [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        internal static extern bool SetupDiEnumDeviceInterfaces(
+            DeviceInfoSetSafeHandle deviceInfoSet,
+            SP_DEVINFO_DATA deviceInfoData,
             ref Guid interfaceClassGuid,
             uint memberIndex,
-            ref SP_DEVICE_INTERFACE_DATA deviceInterfaceData
-            );
+            [In, Out] SP_DEVICE_INTERFACE_DATA deviceInterfaceData);
 
-        [DllImport("setupapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
         public static extern bool SetupDiGetDeviceInterfaceDetail(
             DeviceInfoSetSafeHandle hDevInfo,
-            ref SP_DEVICE_INTERFACE_DATA deviceInterfaceData,
+            [In, Out] SP_DEVICE_INTERFACE_DATA deviceInterfaceData,
             IntPtr deviceInterfaceDetailData,
             uint deviceInterfaceDetailDataSize,
             out uint requiredSize,
-            IntPtr deviceInfoData
-            );
+            [In, Out] SP_DEVINFO_DATA deviceInfoData);
+
+        //[DllImport("irprops.cpl", SetLastError = true)]
+        //public static extern BluetoothDeviceFindSafeHandle BluetoothFindFirstDevice(
+        //    ref BLUETOOTH_DEVICE_SEARCH_PARAMS searchParams, ref BLUETOOTH_DEVICE_INFO deviceInfo);
+
+        //[DllImport("Irprops.cpl", SetLastError = true)]
+        //public static extern bool BluetoothFindNextDevice(BluetoothDeviceFindSafeHandle hFind, ref BLUETOOTH_DEVICE_INFO pbtdi);
+
+        //[DllImport("irprops.cpl", SetLastError = true)]
+        //public static extern bool BluetoothFindDeviceClose(IntPtr hFind);
     }
 }
