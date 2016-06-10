@@ -5,10 +5,12 @@ using System.Runtime.InteropServices;
 
 namespace Bluenote
 {
-    [StructLayout(LayoutKind.Sequential)]
-    internal class BTH_LE_UUID
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    internal struct BTH_LE_UUID
     {
+        [MarshalAs(UnmanagedType.U1)]
         internal bool isShortUuid;
+
         internal ushort shortUuid;
         internal Guid longUuid;
     }

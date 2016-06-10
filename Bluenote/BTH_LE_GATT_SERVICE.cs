@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace Bluenote
 {
-    [StructLayout(LayoutKind.Sequential)]
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
     internal struct BTH_LE_GATT_SERVICE
     {
         internal BTH_LE_UUID serviceUuid;

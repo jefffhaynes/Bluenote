@@ -41,11 +41,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BluetoothDeviceManager.cs" />
-    <Compile Include="BluetoothDeviceFindSafeHandle.cs" />
+    <Compile Include="BluetoothService.cs" />
     <Compile Include="BTH_LE_GATT_SERVICE.cs" />
     <Compile Include="BTH_LE_UUID.cs" />
     <Compile Include="DeviceInfoSetSafeHandle.cs" />
     <Compile Include="DiGetClassFlags.cs" />
+    <Compile Include="GattSpecification.cs" />
     <Compile Include="Interop.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SetupDiGetDeviceRegistryProperty.cs" />

@@ -11,7 +11,7 @@ namespace Bluenote
         private const int ErrorInsufficientBuffer = 122;
         private static readonly Guid BluetoothServiceClassId = new Guid("e0cbf06c-cd8b-4647-bb8a-263b43f0f974");
         private static readonly Guid BluetoothInterfaceServiceClassId = new Guid("781aee18-7733-4ce4-add0-91f41c67b592");
-
+        
         public static IEnumerable<string> GetDevices()
         {
             return GetDevices(BluetoothServiceClassId);
@@ -49,12 +49,12 @@ namespace Bluenote
             }
         }
 
-        public static IEnumerable<string> GetDeviceInterfaces()
+        public static IEnumerable<BluetoothService> GetDeviceInterfaces()
         {
             return GetDeviceInterfaces(BluetoothInterfaceServiceClassId);
         }
 
-        public static IEnumerable<string> GetDeviceInterfaces(Guid serviceClass)
+        public static IEnumerable<BluetoothService> GetDeviceInterfaces(Guid serviceClass)
         {
             using (
                 var deviceInfoSet = SetupDiGetClassDevs(serviceClass,
@@ -90,9 +90,12 @@ namespace Bluenote
 
                             foreach (var service in services)
                             {
-                                Console.WriteLine(service.serviceUuid.shortUuid);
+                                ushort? shortUuid = service.serviceUuid.isShortUuid
+                                    ? service.serviceUuid.shortUuid
+                                    : (ushort?)null;
+
+                                yield return new BluetoothService(service.attributeHandle, service.serviceUuid.longUuid, shortUuid);
                             }
-                            yield return file;
                         }
                         finally
                         {
@@ -110,29 +113,36 @@ namespace Bluenote
 
         private static IEnumerable<BTH_LE_GATT_SERVICE> GetServices(string serviceFile)
         {
-            var fileHandle = Interop.CreateFile(serviceFile, Interop.GENERIC_WRITE | Interop.GENERIC_READ, 0,
-                IntPtr.Zero, Interop.OPEN_EXISTING, Interop.FILE_ATTRIBUTE_NORMAL, IntPtr.Zero);
-
-            ushort serviceBufferCount;
-            Interop.BluetoothGATTGetServices(fileHandle, 0, IntPtr.Zero, out serviceBufferCount, 0);
-
-            var serviceSize = Marshal.SizeOf(typeof (BTH_LE_GATT_SERVICE));
-            var serviceBufferLength = serviceSize*serviceBufferCount;
-            var serviceBuffer = Marshal.AllocHGlobal(serviceBufferLength);
-
-            try
+            using (var fileHandle = Interop.CreateFile(serviceFile, Interop.GENERIC_WRITE | Interop.GENERIC_READ, 0,
+                IntPtr.Zero, Interop.OPEN_EXISTING, Interop.FILE_ATTRIBUTE_NORMAL, IntPtr.Zero))
             {
-                Interop.BluetoothGATTGetServices(fileHandle, (ushort) serviceBufferLength, serviceBuffer,
-                    out serviceBufferCount, 0);
-                for (var i = 0; i < serviceBufferCount; i++)
+                ushort serviceBufferCount;
+                Interop.BluetoothGATTGetServices(fileHandle, 0, IntPtr.Zero, out serviceBufferCount, 0);
+                
+                var serviceSize = Marshal.SizeOf(typeof(BTH_LE_GATT_SERVICE));
+                var serviceBufferLength = serviceSize * serviceBufferCount;
+                
+                var serviceBuffer = Marshal.AllocHGlobal(serviceBufferLength);
+
+                try
                 {
-                    var servicePtr = IntPtr.Add(serviceBuffer, serviceSize*i);
-                    yield return (BTH_LE_GATT_SERVICE) Marshal.PtrToStructure(servicePtr, typeof (BTH_LE_GATT_SERVICE));
+                    Interop.BluetoothGATTGetServices(fileHandle, (ushort)serviceBufferLength, serviceBuffer,
+                        out serviceBufferCount, 0);
+
+                    for (var i = 0; i < serviceBufferCount; i++)
+                    {
+                        var servicePtr = IntPtr.Add(serviceBuffer, serviceSize * i);
+
+                        var service =
+                            (BTH_LE_GATT_SERVICE)Marshal.PtrToStructure(servicePtr, typeof(BTH_LE_GATT_SERVICE));
+
+                        yield return service;
+                    }
                 }
-            }
-            finally
-            {
-                Marshal.FreeHGlobal(serviceBuffer);
+                finally
+                {
+                    Marshal.FreeHGlobal(serviceBuffer);
+                }
             }
         }
     }
