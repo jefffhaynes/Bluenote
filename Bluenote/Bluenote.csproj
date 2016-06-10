@@ -44,6 +44,8 @@
     <Compile Include="BLUETOOTH_DEVICE_INFO.cs" />
     <Compile Include="BLUETOOTH_DEVICE_SEARCH_PARAMS.cs" />
     <Compile Include="BluetoothDeviceFindSafeHandle.cs" />
+    <Compile Include="BTH_LE_GATT_SERVICE.cs" />
+    <Compile Include="BTH_LE_UUID.cs" />
     <Compile Include="DeviceInfoSetSafeHandle.cs" />
     <Compile Include="DiGetClassFlags.cs" />
     <Compile Include="Interop.cs" />

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Text;
+using Microsoft.Win32.SafeHandles;
 
 namespace Bluenote
 {
@@ -83,7 +84,15 @@ namespace Bluenote
                                 deviceInterfaceDetailData, requiredSize, out requiredSize, deviceInfoData))
                                 throw new Win32Exception();
 
-                            yield return Marshal.PtrToStringAuto(deviceInterfaceDetailData + 4);
+                            var file = Marshal.PtrToStringAuto(deviceInterfaceDetailData + 4);
+
+                            var services = GetServices(file);
+
+                            foreach (var service in services)
+                            {
+                                Console.WriteLine(service.serviceUuid.shortUuid);
+                            }
+                            yield return file;
                         }
                         finally
                         {
@@ -97,6 +106,33 @@ namespace Bluenote
         private static DeviceInfoSetSafeHandle SetupDiGetClassDevs(Guid serviceClass, DiGetClassFlags classFlags)
         {
             return Interop.SetupDiGetClassDevs(ref serviceClass, IntPtr.Zero, IntPtr.Zero, classFlags);
+        }
+
+        private static IEnumerable<BTH_LE_GATT_SERVICE> GetServices(string serviceFile)
+        {
+            var fileHandle = Interop.CreateFile(serviceFile, Interop.GENERIC_WRITE | Interop.GENERIC_READ, 0,
+                IntPtr.Zero, Interop.OPEN_EXISTING, Interop.FILE_ATTRIBUTE_NORMAL, IntPtr.Zero);
+            
+            ushort serviceBufferCount;
+            Interop.BluetoothGATTGetServices(fileHandle, 0, IntPtr.Zero, out serviceBufferCount, 0);
+
+            var serviceSize = Marshal.SizeOf(typeof (BTH_LE_GATT_SERVICE));
+            var serviceBufferLength = serviceSize * serviceBufferCount;
+            IntPtr serviceBuffer = Marshal.AllocHGlobal(serviceBufferLength);
+
+            try
+            {
+                Interop.BluetoothGATTGetServices(fileHandle, (ushort)serviceBufferLength, serviceBuffer, out serviceBufferCount, 0);
+                for (int i = 0; i < serviceBufferCount; i++)
+                {
+                    var servicePtr = IntPtr.Add(serviceBuffer, serviceSize*i);
+                    yield return (BTH_LE_GATT_SERVICE)Marshal.PtrToStructure(servicePtr, typeof (BTH_LE_GATT_SERVICE));
+                }
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(serviceBuffer);
+            }
         }
 
         //public static void FindDevices()

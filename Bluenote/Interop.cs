@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
+using Microsoft.Win32.SafeHandles;
 
 namespace Bluenote
 {
@@ -49,6 +50,26 @@ namespace Bluenote
             uint deviceInterfaceDetailDataSize,
             out uint requiredSize,
             [In, Out] SP_DEVINFO_DATA deviceInfoData);
+
+        public const uint FILE_ATTRIBUTE_NORMAL = 0x80;
+        public const uint GENERIC_READ = 0x80000000;
+        public const uint GENERIC_WRITE = 0x40000000;
+        public const uint CREATE_NEW = 1;
+        public const uint CREATE_ALWAYS = 2;
+        public const uint OPEN_EXISTING = 3;
+
+        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        public static extern SafeFileHandle CreateFile(string lpFileName, uint dwDesiredAccess,
+            uint dwShareMode, IntPtr lpSecurityAttributes, uint dwCreationDisposition,
+            uint dwFlagsAndAttributes, IntPtr hTemplateFile);
+
+        [DllImport("BluetoothAPIs.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        public static extern int BluetoothGATTGetServices(
+            SafeHandle handle,
+            ushort serviceBufferCount,
+            IntPtr serviceBuffer,
+            out ushort serviceBufferActual,
+            uint flags);
 
         //[DllImport("irprops.cpl", SetLastError = true)]
         //public static extern BluetoothDeviceFindSafeHandle BluetoothFindFirstDevice(
