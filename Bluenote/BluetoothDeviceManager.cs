@@ -8,7 +8,10 @@ namespace Bluenote
 {
     public static class BluetoothDeviceManager
     {
+        private const int ErrorOk = 0;
         private const int ErrorInsufficientBuffer = 122;
+        private const int ErrorMoreData = 234;
+
         private static readonly Guid BluetoothServiceClassId = new Guid("e0cbf06c-cd8b-4647-bb8a-263b43f0f974");
         private static readonly Guid BluetoothInterfaceServiceClassId = new Guid("781aee18-7733-4ce4-add0-91f41c67b592");
         
@@ -84,13 +87,13 @@ namespace Bluenote
                                 deviceInterfaceDetailData, requiredSize, out requiredSize, deviceInfoData))
                                 throw new Win32Exception();
 
-                            var file = Marshal.PtrToStringAuto(deviceInterfaceDetailData + 4);
+                            var file = Marshal.PtrToStringAuto(deviceInterfaceDetailData + sizeof(int));
 
                             var services = GetServices(file);
 
                             foreach (var service in services)
                             {
-                                ushort? shortUuid = service.serviceUuid.isShortUuid
+                                ushort? shortUuid = service.serviceUuid.isShortUuid //== 1
                                     ? service.serviceUuid.shortUuid
                                     : (ushort?)null;
 
@@ -118,6 +121,10 @@ namespace Bluenote
             {
                 ushort serviceBufferCount;
                 Interop.BluetoothGATTGetServices(fileHandle, 0, IntPtr.Zero, out serviceBufferCount, 0);
+
+                var error = Marshal.GetLastWin32Error();
+                if(error != ErrorMoreData)
+                    throw new Win32Exception(error);
                 
                 var serviceSize = Marshal.SizeOf(typeof(BTH_LE_GATT_SERVICE));
                 var serviceBufferLength = serviceSize * serviceBufferCount;
@@ -126,12 +133,19 @@ namespace Bluenote
 
                 try
                 {
-                    Interop.BluetoothGATTGetServices(fileHandle, (ushort)serviceBufferLength, serviceBuffer,
+                    var result = Interop.BluetoothGATTGetServices(fileHandle, (ushort)serviceBufferLength, serviceBuffer,
                         out serviceBufferCount, 0);
 
+                    if(result != ErrorOk)
+                        throw new Win32Exception();
+                    
                     for (var i = 0; i < serviceBufferCount; i++)
                     {
-                        var servicePtr = IntPtr.Add(serviceBuffer, serviceSize * i);
+                        var servicePtr = IntPtr.Add(serviceBuffer, serviceSize*i);
+                        var data = new byte[serviceBufferLength];
+
+                        Marshal.Copy(serviceBuffer, data, 0, data.Length);
+                        //var test = Read(serviceBuffer);
 
                         var service =
                             (BTH_LE_GATT_SERVICE)Marshal.PtrToStructure(servicePtr, typeof(BTH_LE_GATT_SERVICE));
@@ -144,6 +158,32 @@ namespace Bluenote
                     Marshal.FreeHGlobal(serviceBuffer);
                 }
             }
+        }
+
+        private static BluetoothService Read(IntPtr ptr)
+        {
+            var isShort = Marshal.ReadByte(ptr);
+            ptr = IntPtr.Add(ptr, sizeof(byte));
+
+            ushort? shortId;
+            Guid? longId;
+
+            if (isShort == 1)
+            {
+                longId = null;
+                shortId = (ushort)Marshal.ReadInt16(ptr);
+                ptr = IntPtr.Add(ptr, sizeof(short));
+            }
+            else
+            {
+                shortId = null;
+                longId = (Guid)Marshal.PtrToStructure(ptr, typeof(Guid));
+                ptr = IntPtr.Add(ptr, Marshal.SizeOf(typeof(Guid)));
+            }
+
+            var attributeId = (ushort)Marshal.ReadInt16(ptr);
+
+            return new BluetoothService(attributeId, longId, shortId);
         }
     }
 }

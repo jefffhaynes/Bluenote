@@ -56,13 +56,13 @@ namespace Bluenote
             out uint requiredSize,
             [In, Out] SP_DEVINFO_DATA deviceInfoData);
 
-        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
         internal static extern SafeFileHandle CreateFile(string lpFileName, uint dwDesiredAccess,
             uint dwShareMode, IntPtr lpSecurityAttributes, uint dwCreationDisposition,
             uint dwFlagsAndAttributes, IntPtr hTemplateFile);
 
         [DllImport("BluetoothAPIs.dll", SetLastError = true, CharSet = CharSet.Auto)]
-        internal static extern int BluetoothGATTGetServices(
+        internal static extern uint BluetoothGATTGetServices(
             SafeFileHandle handle,
             ushort serviceBufferCount,
             IntPtr serviceBuffer,

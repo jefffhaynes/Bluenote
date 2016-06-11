@@ -4,7 +4,7 @@ namespace Bluenote
 {
     public class BluetoothService
     {
-        internal BluetoothService(ushort attributeHandle, Guid longUuid, ushort? shortUuid)
+        internal BluetoothService(ushort attributeHandle, Guid? longUuid, ushort? shortUuid)
         {
             AttributeHandle = attributeHandle;
             LongUuid = longUuid;
@@ -15,7 +15,7 @@ namespace Bluenote
 
         public ushort? ShortUuid { get; }
 
-        public Guid LongUuid { get; }
+        public Guid? LongUuid { get; }
 
         public string SpecificationName
         {
@@ -34,7 +34,7 @@ namespace Bluenote
             if (name != null)
                 return name;
 
-            return LongUuid.ToString();
+            return LongUuid?.ToString() ?? base.ToString();
         }
     }
 }

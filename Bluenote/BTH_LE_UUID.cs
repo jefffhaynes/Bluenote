@@ -8,10 +8,13 @@ namespace Bluenote
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     internal struct BTH_LE_UUID
     {
-        [MarshalAs(UnmanagedType.U1)]
+        //[FieldOffset(0)]
         internal bool isShortUuid;
-
+        
+        //[FieldOffset(4)]
         internal ushort shortUuid;
+
+        //[FieldOffset(4)]
         internal Guid longUuid;
     }
 }
