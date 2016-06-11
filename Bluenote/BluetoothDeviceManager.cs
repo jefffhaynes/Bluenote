@@ -160,30 +160,30 @@ namespace Bluenote
             }
         }
 
-        private static BluetoothService Read(IntPtr ptr)
-        {
-            var isShort = Marshal.ReadByte(ptr);
-            ptr = IntPtr.Add(ptr, sizeof(byte));
+        //private static BluetoothService Read(IntPtr ptr)
+        //{
+        //    var isShort = Marshal.ReadByte(ptr);
+        //    ptr = IntPtr.Add(ptr, sizeof(byte));
 
-            ushort? shortId;
-            Guid? longId;
+        //    ushort? shortId;
+        //    Guid? longId;
 
-            if (isShort == 1)
-            {
-                longId = null;
-                shortId = (ushort)Marshal.ReadInt16(ptr);
-                ptr = IntPtr.Add(ptr, sizeof(short));
-            }
-            else
-            {
-                shortId = null;
-                longId = (Guid)Marshal.PtrToStructure(ptr, typeof(Guid));
-                ptr = IntPtr.Add(ptr, Marshal.SizeOf(typeof(Guid)));
-            }
+        //    if (isShort == 1)
+        //    {
+        //        longId = null;
+        //        shortId = (ushort)Marshal.ReadInt16(ptr);
+        //        ptr = IntPtr.Add(ptr, sizeof(short));
+        //    }
+        //    else
+        //    {
+        //        shortId = null;
+        //        longId = (Guid)Marshal.PtrToStructure(ptr, typeof(Guid));
+        //        ptr = IntPtr.Add(ptr, Marshal.SizeOf(typeof(Guid)));
+        //    }
 
-            var attributeId = (ushort)Marshal.ReadInt16(ptr);
+        //    var attributeId = (ushort)Marshal.ReadInt16(ptr);
 
-            return new BluetoothService(attributeId, longId, shortId);
-        }
+        //    return new BluetoothService(attributeId, longId, shortId);
+        //}
     }
 }
